@@ -47,7 +47,19 @@ func (bqContext *BqContext) CreateTableAndUploader(tableId string) error {
 	}
 	if !slices.Contains(tables, tableId) {
 		logger.Info("Creating bigquery table", "table", bqTable)
-		schema, err := GenerateTableSchema(TransactionalEmailEvent{})
+		var schema bigquery.Schema
+		switch tableId {
+		case "transactional-email":
+			schema, err = GenerateTableSchema(TransactionalEmailEvent{})
+		case "marketing-email":
+			schema, err = GenerateTableSchema(MarketingEmailEvent{})
+		case "marketing-sms":
+			schema, err = GenerateTableSchema(MarketingSMSEvent{})
+		case "transactional-sms":
+			schema, err = GenerateTableSchema(TransactionalSMSEvent{})
+		default:
+			return fmt.Errorf("table %s not found", tableId)
+		}
 		if err != nil {
 			return err
 		}

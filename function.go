@@ -2,7 +2,6 @@ package function
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -19,7 +18,9 @@ func init() {
 	gcpProjectID := os.Getenv("GCP_PROJECT_ID")
 	datasetId := os.Getenv("BIGQUERY_DATASET_ID")
 	bqContext.InitBigqueryClient(gcpProjectID, datasetId)
-	bqContext.CreateTableAndUploader("brevo-test-consumer")
+	for _, tableId := range []string{"transactional-email", "marketing-email", "marketing-sms", "transactional-sms"} {
+		bqContext.CreateTableAndUploader(tableId)
+	}
 	functions.CloudEvent("HelloPubSub", helloPubSub)
 }
 
@@ -28,7 +29,8 @@ type MessagePublishedData struct {
 }
 
 type PubSubMessage struct {
-	Data []byte `json:"data"`
+	Data       []byte            `json:"data"`
+	Attributes map[string]string `json:"attributes"`
 }
 
 // helloPubSub consumes a CloudEvent message and extracts the Pub/Sub message.
@@ -38,19 +40,18 @@ func helloPubSub(ctx context.Context, e event.Event) error {
 		return fmt.Errorf("event.DataAs: %w", err)
 	}
 
-	var data EventDecode
-	err := json.Unmarshal(msg.Message.Data, &data)
-	if err != nil {
-		logger.Error("Error unmarshalling event data", "error", err)
-		return err
+	category := msg.Message.Attributes["category"]
+	switch category {
+	case "transactional-email":
+		DecodeAndSend[TransactionalEmailEvent](msg.Message.Data, bqContext.Uploaders[category])
+	case "marketing-email":
+		DecodeAndSend[MarketingEmailEvent](msg.Message.Data, bqContext.Uploaders[category])
+	case "marketing-sms":
+		DecodeAndSend[MarketingSMSEvent](msg.Message.Data, bqContext.Uploaders[category])
+	case "transactional-sms":
+		DecodeAndSend[TransactionalSMSEvent](msg.Message.Data, bqContext.Uploaders[category])
+	default:
+		return fmt.Errorf("invalid category: ##%s##", category)
 	}
-
-	// Insert data into BigQuery
-	if err := bqContext.Uploaders["brevo-test-consumer"].Put(bqContext.Ctx, data.Data); err != nil {
-		logger.Error("Error inserting data into BigQuery", "error", err)
-		return err
-	}
-	logger.Info("Successfully sent row to Bigquery", "data", data.Data)
-
 	return nil
 }
