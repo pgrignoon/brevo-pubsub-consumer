@@ -2,6 +2,8 @@ package function
 
 import (
 	"context"
+	"fmt"
+	"slices"
 
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
@@ -15,6 +17,7 @@ type BqContext struct {
 	Client    *bigquery.Client
 	ProjectId string `json:"projectId"`
 	DatasetId string `json:"datasetId"`
+	Uploaders map[string]*bigquery.Uploader
 }
 
 /*
@@ -29,6 +32,34 @@ func (bqContext *BqContext) InitBigqueryClient(projectId, datasetId string) erro
 	if err != nil {
 		return err
 	}
+	bqContext.Uploaders = make(map[string]*bigquery.Uploader)
+	return nil
+}
+
+/*
+Create the bigquery table and uploader if it doesn't exist, by listing the existing tables in the dataset
+*/
+func (bqContext *BqContext) CreateTableAndUploader(tableId string) error {
+	bqTable := bqContext.Client.Dataset(bqContext.DatasetId).Table(tableId)
+	tables, err := bqContext.ListTables()
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(tables, tableId) {
+		logger.Info("Creating bigquery table", "table", bqTable)
+		schema, err := GenerateTableSchema(TransactionalEmailEvent{})
+		if err != nil {
+			return err
+		}
+		bqTable := bqContext.Client.Dataset(bqContext.DatasetId).Table(tableId)
+		err = bqTable.Create(bqContext.Ctx, &bigquery.TableMetadata{Schema: schema})
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.Info(fmt.Sprintf("Bigquery table %v already exists", "brevo-test-consumer"), "table", bqTable)
+	}
+	bqContext.Uploaders[tableId] = bqTable.Uploader()
 	return nil
 }
 
