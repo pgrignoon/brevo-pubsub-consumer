@@ -1,0 +1,66 @@
+package function
+
+import (
+	"context"
+
+	"cloud.google.com/go/bigquery"
+	"google.golang.org/api/iterator"
+)
+
+/*
+BqContext struct to hold the BigQuery client and configuration (projectId, datasetId)
+*/
+type BqContext struct {
+	Ctx       context.Context
+	Client    *bigquery.Client
+	ProjectId string `json:"projectId"`
+	DatasetId string `json:"datasetId"`
+}
+
+/*
+Initialise the BigQuery client to perform BigQuery operations
+*/
+func (bqContext *BqContext) InitBigqueryClient(projectId, datasetId string) error {
+	var err error
+	bqContext.Ctx = context.Background()
+	bqContext.DatasetId = datasetId
+	bqContext.ProjectId = projectId
+	bqContext.Client, err = bigquery.NewClient(bqContext.Ctx, bqContext.ProjectId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+List all the tables in the dataset from the BqContext object
+*/
+func (bqContext *BqContext) ListTables() ([]string, error) {
+	table := make([]string, 1)
+	ts := bqContext.Client.Dataset(bqContext.DatasetId).Tables(bqContext.Ctx)
+	for {
+		t, err := ts.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return table, err
+		}
+		table = append(table, t.TableID)
+	}
+	return table, nil
+}
+
+/*
+Generate the BigQuery schema for the table, and remove the required constraint for all fields
+*/
+func GenerateTableSchema(model any) (bigquery.Schema, error) {
+	schema, err := bigquery.InferSchema(model)
+	if err != nil {
+		return schema, err
+	}
+	for i := range schema {
+		schema[i].Required = false
+	}
+	return schema, nil
+}
