@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"slices"
 
@@ -15,6 +15,7 @@ import (
 
 var bqContext BqContext
 var u *bigquery.Uploader
+var logger *slog.Logger
 
 func init() {
 	gcpProjectID := os.Getenv("GCP_PROJECT_ID")
@@ -25,25 +26,24 @@ func init() {
 	bqTable := bqContext.Client.Dataset(datasetId).Table("brevo-test-consumer")
 	tables, err := bqContext.ListTables()
 	if err != nil {
-		log.Printf("Error listing bigquery tables: %v", err)
+		logger.Error("Error listing bigquery tables", "error", err)
 		return
 	}
-	log.Printf("Tables: %v", tables)
 	if !slices.Contains(tables, "brevo-test-consumer") {
-		log.Printf("Creating bigquery table: %v", bqTable)
+		logger.Info("Creating bigquery table", "table", bqTable)
 		schema, err := GenerateTableSchema(TransactionalEmailEvent{})
 		if err != nil {
-			log.Printf("Error generating bigquery schema: %v", err)
+			logger.Error("Error generating bigquery schema", "error", err)
 			return
 		}
 		bqTable := bqContext.Client.Dataset(datasetId).Table("brevo-test-consumer")
 		err = bqTable.Create(bqContext.Ctx, &bigquery.TableMetadata{Schema: schema})
 		if err != nil {
-			log.Printf("Error creating bigquery table: %v", err)
+			logger.Error("Error creating bigquery table", "error", err)
 			return
 		}
 	} else {
-		log.Printf("Bigquery table already exists: %v", bqTable)
+		logger.Info(fmt.Sprintf("Bigquery table %v already exists", "brevo-test-consumer"), "table", bqTable)
 	}
 	u = bqTable.Uploader()
 	functions.CloudEvent("HelloPubSub", helloPubSub)
@@ -64,28 +64,19 @@ func helloPubSub(ctx context.Context, e event.Event) error {
 		return fmt.Errorf("event.DataAs: %w", err)
 	}
 
-	name := string(msg.Message.Data) // Automatically decoded from base64.
-	if name == "" {
-		name = "World"
-	}
-	log.Printf("Hello, %s!", name)
-
 	var data EventDecode
 	err := json.Unmarshal(msg.Message.Data, &data)
 	if err != nil {
-		log.Printf("Errorrrrr: %v\n", err)
+		logger.Error("Error unmarshalling event data", "error", err)
 		return err
 	}
-
-	log.Printf("Event Category: %s", data.EventCategory)
-	log.Printf("Event Data: %v", data.Data)
 
 	// Insert data into BigQuery
 	if err := u.Put(bqContext.Ctx, data.Data); err != nil {
-		log.Printf("Error inserting data into BigQuery: %v\n", err)
+		logger.Error("Error inserting data into BigQuery", "error", err)
 		return err
 	}
-	log.Printf("Successfully sent row to Bigquery: %v\n", data.Data)
+	logger.Info("Successfully sent row to Bigquery", "data", data.Data)
 
 	return nil
 }
