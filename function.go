@@ -15,6 +15,7 @@ var bqContext BqContext
 var logger *slog.Logger
 
 func init() {
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	gcpProjectID := os.Getenv("GCP_PROJECT_ID")
 	datasetId := os.Getenv("BIGQUERY_DATASET_ID")
 	bqContext.InitBigqueryClient(gcpProjectID, datasetId)
