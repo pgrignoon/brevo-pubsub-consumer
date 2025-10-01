@@ -21,7 +21,7 @@ func init() {
 	for _, tableId := range []string{"transactional-email", "marketing-email", "marketing-sms", "transactional-sms"} {
 		bqContext.CreateTableAndUploader(tableId)
 	}
-	functions.CloudEvent("HelloPubSub", helloPubSub)
+	functions.CloudEvent("RunPubSubConsumer", runPubSubConsumer)
 }
 
 type MessagePublishedData struct {
@@ -33,8 +33,8 @@ type PubSubMessage struct {
 	Attributes map[string]string `json:"attributes"`
 }
 
-// helloPubSub consumes a CloudEvent message and extracts the Pub/Sub message.
-func helloPubSub(ctx context.Context, e event.Event) error {
+// runPubSubConsumer consumes a CloudEvent message and extracts the Pub/Sub message.
+func runPubSubConsumer(ctx context.Context, e event.Event) error {
 	var msg MessagePublishedData
 	if err := e.DataAs(&msg); err != nil {
 		return fmt.Errorf("event.DataAs: %w", err)
