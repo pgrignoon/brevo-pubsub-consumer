@@ -6,7 +6,10 @@ import (
 	"cloud.google.com/go/bigquery"
 )
 
-func DecodeAndSend[T any](msg []byte, uploader *bigquery.Uploader) error {
+/*
+DecodeAndSend decodes the message using the event struct, converts it to a pubsub event struct, and sends it to BigQuery.
+*/
+func DecodeAndSend[T Event](msg []byte, uploader *bigquery.Uploader) error {
 	var data T
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
@@ -14,7 +17,7 @@ func DecodeAndSend[T any](msg []byte, uploader *bigquery.Uploader) error {
 		return err
 	}
 	// Insert data into BigQuery
-	if err := uploader.Put(bqContext.Ctx, data); err != nil {
+	if err := uploader.Put(bqContext.Ctx, data.ToBigquery()); err != nil {
 		logger.Error("Error inserting data into BigQuery", "error", err)
 		return err
 	}
