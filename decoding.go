@@ -10,16 +10,15 @@ import (
 /*
 DecodeAndSend decodes the message using the event struct, converts it to a pubsub event struct, and sends it to BigQuery.
 */
-func DecodeAndSend[T Event](msg []byte, uploader *bigquery.Uploader, ctx context.Context, datasetId, tableId string) error {
+func DecodeAndSend[T Event](msg []byte, uploader *bigquery.Uploader, ctx context.Context) (T, error) {
 	var data T
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
-		return err
+		return data, err
 	}
 	// Insert data into BigQuery
 	if err := uploader.Put(ctx, data.ToBigquery()); err != nil {
-		return err
+		return data, err
 	}
-	logger.Info("Successfully sent row to Bigquery", "data", data, "datasetId", datasetId, "tableId", tableId)
-	return nil
+	return data, nil
 }

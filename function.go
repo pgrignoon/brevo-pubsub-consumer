@@ -40,7 +40,9 @@ type PubSubMessage struct {
 // runPubSubConsumer consumes a CloudEvent message and extracts the Pub/Sub message.
 func runPubSubConsumer(ctx context.Context, e event.Event) error {
 	var msg MessagePublishedData
-	if err := e.DataAs(&msg); err != nil {
+	var err error
+	var data Event
+	if err = e.DataAs(&msg); err != nil {
 		return fmt.Errorf("event.DataAs: %w", err)
 	}
 	// Extract the category, datasetId, and tableId from the attributes
@@ -56,46 +58,38 @@ func runPubSubConsumer(ctx context.Context, e event.Event) error {
 	if !ok {
 		return fmt.Errorf("target-table not found in attributes")
 	}
-	// Switch on the category and send the data to the appropriate table
+	// Switch on the category, get the corresponding uploader and send the data to the appropriate table
 	switch category {
 	case "transactional-email":
 		uploader, ok := bqContext.Uploaders[fmt.Sprintf("%s.%s", datasetId, tableId)]
 		if !ok {
 			return fmt.Errorf("uploader not found for datasetId: %s, tableId: %s", datasetId, tableId)
 		}
-		err := DecodeAndSend[TransactionalEmailEvent](msg.Message.Data, uploader, bqContext.Ctx, datasetId, tableId)
-		if err != nil {
-			return fmt.Errorf("error decoding and sending transactional email event to table: %s.%s: %w", datasetId, tableId, err)
-		}
+		data, err = DecodeAndSend[TransactionalEmailEvent](msg.Message.Data, uploader, bqContext.Ctx)
 	case "marketing-email":
 		uploader, ok := bqContext.Uploaders[fmt.Sprintf("%s.%s", datasetId, tableId)]
 		if !ok {
 			return fmt.Errorf("uploader not found for datasetId: %s, tableId: %s", datasetId, tableId)
 		}
-		err := DecodeAndSend[MarketingEmailEvent](msg.Message.Data, uploader, bqContext.Ctx, datasetId, tableId)
-		if err != nil {
-			return fmt.Errorf("error decoding and sending marketing email event to table: %s.%s: %w", datasetId, tableId, err)
-		}
+		data, err = DecodeAndSend[MarketingEmailEvent](msg.Message.Data, uploader, bqContext.Ctx)
 	case "marketing-sms":
 		uploader, ok := bqContext.Uploaders[fmt.Sprintf("%s.%s", datasetId, tableId)]
 		if !ok {
 			return fmt.Errorf("uploader not found for datasetId: %s, tableId: %s", datasetId, tableId)
 		}
-		err := DecodeAndSend[MarketingSMSEvent](msg.Message.Data, uploader, bqContext.Ctx, datasetId, tableId)
-		if err != nil {
-			return fmt.Errorf("error decoding and sending marketing sms event to table: %s.%s: %w", datasetId, tableId, err)
-		}
+		data, err = DecodeAndSend[MarketingSMSEvent](msg.Message.Data, uploader, bqContext.Ctx)
 	case "transactional-sms":
 		uploader, ok := bqContext.Uploaders[fmt.Sprintf("%s.%s", datasetId, tableId)]
 		if !ok {
 			return fmt.Errorf("uploader not found for datasetId: %s, tableId: %s", datasetId, tableId)
 		}
-		err := DecodeAndSend[TransactionalSMSEvent](msg.Message.Data, uploader, bqContext.Ctx, datasetId, tableId)
-		if err != nil {
-			return fmt.Errorf("error decoding and sending transactional sms event to table: %s.%s: %w", datasetId, tableId, err)
-		}
+		data, err = DecodeAndSend[TransactionalSMSEvent](msg.Message.Data, uploader, bqContext.Ctx)
 	default:
 		return fmt.Errorf("invalid category: ##%s##", category)
 	}
+	if err != nil {
+		return fmt.Errorf("error decoding and sending %s event to table: %s.%s: %w", category, datasetId, tableId, err)
+	}
+	logger.Info("Successfully sent row to Bigquery", "data", data, "datasetId", datasetId, "tableId", tableId, "category", category)
 	return nil
 }
