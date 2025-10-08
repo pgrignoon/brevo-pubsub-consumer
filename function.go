@@ -16,8 +16,7 @@ var logger *slog.Logger
 func init() {
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	gcpProjectID := os.Getenv("GCP_PROJECT_ID")
-	datasetId := os.Getenv("BIGQUERY_DATASET_ID")
-	err := bqContext.InitBigqueryClient(gcpProjectID, datasetId)
+	err := bqContext.InitBigqueryClient(gcpProjectID)
 	if err != nil {
 		panic("Error initializing bigquery client: " + err.Error())
 	}
