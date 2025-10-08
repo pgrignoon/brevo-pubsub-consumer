@@ -1,6 +1,7 @@
 package function
 
 import (
+	"context"
 	"encoding/json"
 
 	"cloud.google.com/go/bigquery"
@@ -9,18 +10,16 @@ import (
 /*
 DecodeAndSend decodes the message using the event struct, converts it to a pubsub event struct, and sends it to BigQuery.
 */
-func DecodeAndSend[T Event](msg []byte, uploader *bigquery.Uploader) error {
+func DecodeAndSend[T Event](msg []byte, uploader *bigquery.Uploader, ctx context.Context, datasetId, tableId string) error {
 	var data T
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
-		logger.Error("Error unmarshalling event data", "error", err)
 		return err
 	}
 	// Insert data into BigQuery
-	if err := uploader.Put(bqContext.Ctx, data.ToBigquery()); err != nil {
-		logger.Error("Error inserting data into BigQuery", "error", err)
+	if err := uploader.Put(ctx, data.ToBigquery()); err != nil {
 		return err
 	}
-	logger.Info("Successfully sent row to Bigquery", "data", data)
+	logger.Info("Successfully sent row to Bigquery", "data", data, "datasetId", datasetId, "tableId", tableId)
 	return nil
 }

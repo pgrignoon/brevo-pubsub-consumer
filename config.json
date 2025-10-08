@@ -1,0 +1,29 @@
+{
+    "tables": [
+        {
+            "datasetId": "paul",
+            "tableId": "journey-email",
+            "eventCategory": "transactional-email"
+        },
+        {
+            "datasetId": "paul",
+            "tableId": "journey-sms",
+            "eventCategory": "transactional-sms"
+        },
+        {
+            "datasetId": "paul",
+            "tableId": "oneshot-email",
+            "eventCategory": "marketing-email"
+        },
+        {
+            "datasetId": "paul",
+            "tableId": "oneshot-sms",
+            "eventCategory": "marketing-sms"
+        },
+        {
+            "datasetId": "paulbis",
+            "tableId": "oneshot-sms",
+            "eventCategory": "marketing-sms"
+        }
+    ]
+}
