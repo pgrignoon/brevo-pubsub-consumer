@@ -32,9 +32,9 @@ type Table struct {
 /*
 Initialise the BigQuery client to perform BigQuery operations
 */
-func (bqContext *BqContext) InitBigqueryClient(projectId string) error {
+func (bqContext *BqContext) InitBigqueryClient(projectId, configFilePath string) error {
 	var err error
-	err = bqContext.LoadTablesFromConfig("./serverless_function_source_code/config.json")
+	err = bqContext.LoadTablesFromConfig(configFilePath)
 	if err != nil {
 		return err
 	}
