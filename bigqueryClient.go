@@ -86,13 +86,13 @@ func (bqContext *BqContext) CreateTablesAndUploaders() error {
 			var schema bigquery.Schema
 			switch table.EventCategory {
 			case "transactional-email":
-				schema, err = GenerateTableSchema(TransactionalEmailEventBigquery{})
+				schema, err = GenerateTableSchema(TransactionalEmailEventBigquery{}, TransactionalEmailEventBigqueryDescription)
 			case "marketing-email":
-				schema, err = GenerateTableSchema(MarketingEmailEventBigquery{})
+				schema, err = GenerateTableSchema(MarketingEmailEventBigquery{}, MarketingEmailEventBigqueryDescription)
 			case "marketing-sms":
-				schema, err = GenerateTableSchema(MarketingSMSEventBigquery{})
+				schema, err = GenerateTableSchema(MarketingSMSEventBigquery{}, MarketingSMSEventBigqueryDescription)
 			case "transactional-sms":
-				schema, err = GenerateTableSchema(TransactionalSMSEventBigquery{})
+				schema, err = GenerateTableSchema(TransactionalSMSEventBigquery{}, TransactionalSMSEventBigqueryDescription)
 			default:
 				return fmt.Errorf("schema not found for event category %s", table.EventCategory)
 			}
@@ -134,13 +134,20 @@ func (bqContext *BqContext) ListTables(datasetId string) ([]string, error) {
 /*
 Generate the BigQuery schema for the table, and remove the required constraint for all fields
 */
-func GenerateTableSchema(model any) (bigquery.Schema, error) {
+func GenerateTableSchema(model any, descriptions map[string]string) (bigquery.Schema, error) {
 	schema, err := bigquery.InferSchema(model)
 	if err != nil {
 		return schema, err
 	}
+	// Remove the required constraint for all fields
 	for i := range schema {
 		schema[i].Required = false
+	}
+	// Add the descriptions to the fields
+	for _, field := range schema {
+		if desc, ok := descriptions[field.Name]; ok {
+			field.Description = desc
+		}
 	}
 	return schema, nil
 }

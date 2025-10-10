@@ -65,6 +65,28 @@ type MarketingEmailContentBigquery struct {
 	WorkPhone bigquery.NullString `json:"work_phone"`
 }
 
+var MarketingEmailEventBigqueryDescription = map[string]string{
+	"Event":        "The event type",
+	"Email":        "Recipient email",
+	"Id":           "Internal id of webhook",
+	"DateSent":     "Date the campaign was sent (year-month-day, hour:minute:second)",
+	"DateEvent":    "Date the event occurred (year-month-day, hour:minute:second)",
+	"TSSent":       "Timestamp in seconds of when campaign was sent",
+	"TSEvent":      "Timestamp in seconds of when event occurred",
+	"CampId":       "Internal id of campaign",
+	"CampaignName": "Internal name of campaign",
+	"Reason":       "The reason the event occurred",
+	"TS":           "Timestamp in seconds of when event occurred",
+	"Tag":          "Internal tag of campaign",
+	"SegmentIds":   "Newly added fields for mails that are sent to a segment",
+	"Url":          "URL clicked",
+	"SendingIP":    "IP used to send message",
+	"ListId":       "Array of ids",
+	"Key":          "Internal Key",
+	"Date":         "Date the event occurred (year-month-day, hour:minute:second)",
+	"Content":      "Full contact information with updates",
+}
+
 func (m MarketingEmailEvent) ToBigquery() any {
 	var segmentIds []int64
 	if m.SegmentIds != nil {

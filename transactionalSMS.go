@@ -34,7 +34,7 @@ type TransactionalSMSEventBigquery struct {
 	To              bigquery.NullString         `json:"to"`
 	SMSCount        bigquery.NullInt64          `json:"sms_count"`
 	CreditsUsed     bigquery.NullFloat64        `json:"credits_used"`
-	MessageId       bigquery.NullInt64          `json:"message_id"`
+	MessageId       bigquery.NullInt64          `json:"messageId"`
 	RemainingCredit bigquery.NullFloat64        `json:"remaining_credit"`
 	MsgStatus       bigquery.NullString         `json:"msg_status"`
 	Date            bigquery.NullString         `json:"date"`
@@ -52,6 +52,26 @@ type TransactionalSMSEventBigquery struct {
 type TransactionalSMSReference struct {
 	Key   bigquery.NullString `json:"key"`
 	Value bigquery.NullString `json:"value"`
+}
+
+var TransactionalSMSEventBigqueryDescription = map[string]string{
+	"Id":              "The id is the webhook ID, so it will remain the same for webhook payloads sent to a single webhook URL",
+	"To":              "Mobile number of the recipient",
+	"SMSCount":        "Number of SMS sent",
+	"CreditsUsed":     "Credits deducted",
+	"MessageId":       "Message id for Transactional SMS",
+	"RemainingCredit": "Remaining balance credit",
+	"MsgStatus":       "Status of the message (sent, delivered, soft_bounce, hard_bounce)",
+	"Date":            "Time at which the event is generated",
+	"Type":            "Type of sms(marketing/transactional)",
+	"Reference":       "Id generated for every Transactional SMS",
+	"Status":          "Status of the event",
+	"Description":     "Bounce Reason for Failed to deliver message, or description of the event",
+	"TSEvent":         "It is the time at which the callback is sent to client in Unix format",
+	"Tag":             "SMS tag if the client has used any",
+	"ErrorCode":       "Error code",
+	"Reply":           "Reply to the message",
+	"BounceType":      "Bounce type",
 }
 
 func (t TransactionalSMSEvent) ToBigquery() any {

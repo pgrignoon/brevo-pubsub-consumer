@@ -46,7 +46,27 @@ type MarketingSMSEventBigquery struct {
 	ErrorCode        bigquery.NullInt64   `json:"error_code"`
 	Reply            bigquery.NullString  `json:"reply"`
 	BounceType       bigquery.NullString  `json:"bounce_type"`
-	MessageId        bigquery.NullInt64   `json:"message_id"`
+	MessageId        bigquery.NullInt64   `json:"messageId"`
+}
+
+var MarketingSMSEventBigqueryDescription = map[string]string{
+	"Id":               "Unique id generated for each payload",
+	"To":               "Mobile number",
+	"SMSCount":         "Number of SMS sent",
+	"CreditsUsed":      "Credits deducted",
+	"RemainingCredits": "Remaining balance credit",
+	"MsgStatus":        "Status of the message (sent, delivered, soft_bounce, hard_bounce)",
+	"Date":             "Time at which the event is generated",
+	"Type":             "Type of sms(marketing/transactional)",
+	"CampaignId":       "Campaign id for campaign sms",
+	"Status":           "Status of the event",
+	"Description":      "Bounce Reason for Failed to deliver message, description of the event",
+	"TSEvent":          "Timestamp in seconds of when event occurred",
+	"Tag":              "Internal tag of campaign",
+	"ErrorCode":        "Error code",
+	"Reply":            "Reply to the message",
+	"BounceType":       "Bounce type",
+	"MessageId":        "Internal id of message",
 }
 
 func (m MarketingSMSEvent) ToBigquery() any {

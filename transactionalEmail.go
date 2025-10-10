@@ -19,9 +19,7 @@ type TransactionalEmailEvent struct {
 	SendingIP     *string   `json:"sending_ip"`
 	TSEpoch       *int64    `json:"ts_epoch"`
 	TemplateId    *int64    `json:"template_id"`
-	TemplateName  *string   `json:"template_name"`
 	Tag           *string   `json:"tag"`
-	Message       *string   `json:"message"`
 	Status        *string   `json:"status"`
 	Reason        *string   `json:"reason"`
 	Tags          *[]string `json:"tags"`
@@ -49,9 +47,7 @@ type TransactionalEmailEventBigquery struct {
 	SendingIP     bigquery.NullString `json:"sending_ip"`
 	TSEpoch       bigquery.NullInt64  `json:"ts_epoch"`
 	TemplateId    bigquery.NullInt64  `json:"template_id"`
-	TemplateName  bigquery.NullString `json:"template_name"`
 	Tag           bigquery.NullString `json:"tag"`
-	Message       bigquery.NullString `json:"message"`
 	Status        bigquery.NullString `json:"status"`
 	Reason        bigquery.NullString `json:"reason"`
 	Tags          []string            `json:"tags"`
@@ -61,6 +57,31 @@ type TransactionalEmailEventBigquery struct {
 	MirrorLink    bigquery.NullString `json:"mirror_link"`
 	ContactId     bigquery.NullInt64  `json:"contact_id"`
 	SenderEmail   bigquery.NullString `json:"sender_email"`
+}
+
+var TransactionalEmailEventBigqueryDescription = map[string]string{
+	"Event":         "Event type",
+	"Email":         "Recipient of message",
+	"Id":            "Webhook id",
+	"Date":          "date sent listed in YEAR-MONTH-DAY, HOUR:MINUTE:SECOND in your timezone",
+	"TS":            "Timestamp in seconds of when event occurred",
+	"TSEvent":       "It is the time at which the callback is sent to client in Unix format",
+	"Subject":       "Message subject",
+	"XMailinCustom": "Custom added header",
+	"Status":        "Status of the event",
+	"MessageId":     "Internal message id",
+	"SendingIP":     "IP used to send message",
+	"TSEpoch":       "Time stamp in milliseconds UTC of when message was sent",
+	"TemplateId":    "Internal id of the template",
+	"Tag":           "Tag you might have used to identify your message",
+	"Reason":        "Reason for the event",
+	"Tags":          "Tags you might have used to identify your message",
+	"Link":          "URL accessed by recipient",
+	"UserAgent":     "Information about the user’s browser or email client",
+	"DeviceUsed":    "Details about the device from which the action originated",
+	"MirrorLink":    "A preview link corresponding to the UI logs for the event",
+	"ContactId":     "Brevo identifier for an existing contact. If contact is not present, return 0",
+	"SenderEmail":   "Email address of the sender",
 }
 
 func (t TransactionalEmailEvent) ToBigquery() any {
@@ -81,9 +102,7 @@ func (t TransactionalEmailEvent) ToBigquery() any {
 		SendingIP:     toNullString(t.SendingIP),
 		TSEpoch:       toNullInt64(t.TSEpoch),
 		TemplateId:    toNullInt64(t.TemplateId),
-		TemplateName:  toNullString(t.TemplateName),
 		Tag:           toNullString(t.Tag),
-		Message:       toNullString(t.Message),
 		Status:        toNullString(t.Status),
 		Reason:        toNullString(t.Reason),
 		Tags:          tags,
