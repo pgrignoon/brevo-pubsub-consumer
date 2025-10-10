@@ -1,26 +1,31 @@
 {
     "tables": [
         {
+            "source": "upd-crm-test-journey-email",
             "datasetId": "paul",
             "tableId": "journey-email",
             "eventCategory": "transactional-email"
         },
         {
+            "source": "upd-crm-test-journey-sms",
             "datasetId": "paul",
             "tableId": "journey-sms",
             "eventCategory": "transactional-sms"
         },
         {
+            "source": "upd-crm-test-oneshot-email",
             "datasetId": "paul",
             "tableId": "oneshot-email",
             "eventCategory": "marketing-email"
         },
         {
+            "source": "upd-crm-test-oneshot-sms",
             "datasetId": "paul",
             "tableId": "oneshot-sms",
             "eventCategory": "marketing-sms"
         },
         {
+            "source": "upd-crm-prod-oneshot-sms",
             "datasetId": "paulbis",
             "tableId": "oneshot-sms",
             "eventCategory": "marketing-sms"

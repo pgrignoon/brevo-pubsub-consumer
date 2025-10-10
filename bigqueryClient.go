@@ -24,6 +24,7 @@ type BqContext struct {
 }
 
 type Table struct {
+	Source        string `json:"source"`
 	DatasetId     string `json:"datasetId"`
 	TableId       string `json:"tableId"`
 	EventCategory string `json:"eventCategory"`
@@ -98,16 +99,15 @@ func (bqContext *BqContext) CreateTablesAndUploaders() error {
 			if err != nil {
 				return err
 			}
-			bqTable := bqContext.Client.Dataset(table.DatasetId).Table(table.TableId)
 			err = bqTable.Create(bqContext.Ctx, &bigquery.TableMetadata{Schema: schema})
 			if err != nil {
 				return err
 			}
 		} else {
-			logger.Info(fmt.Sprintf("Bigquery table %v already exists", "brevo-test-consumer"), "table", bqTable)
+			logger.Info("Bigquery table already exists", "table", bqTable)
 		}
 		bqContext.Uploaders[fmt.Sprintf("%s.%s", table.DatasetId, table.TableId)] = bqTable.Uploader()
-		fmt.Printf("Uploader created for %s.%s\n", table.DatasetId, table.TableId)
+		logger.Info("Uploader created", "source", table.Source, "datasetId", table.DatasetId, "tableId", table.TableId)
 	}
 	return nil
 }
@@ -143,4 +143,16 @@ func GenerateTableSchema(model any) (bigquery.Schema, error) {
 		schema[i].Required = false
 	}
 	return schema, nil
+}
+
+/*
+Get the target table for the source
+*/
+func (bqContext *BqContext) GetTargetTable(source string) (string, string, error) {
+	for _, table := range bqContext.Tables {
+		if table.Source == source {
+			return table.DatasetId, table.TableId, nil
+		}
+	}
+	return "", "", fmt.Errorf("table not found for source: %s", source)
 }
